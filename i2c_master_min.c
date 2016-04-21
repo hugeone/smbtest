@@ -20,70 +20,34 @@ void i2c_master_init(void)
 
 }/* i2c_init */
 
-uint8_t i2c_master_start(uint8_t address)
+void i2c_master_start(uint8_t address)
 {
-    uint8_t   twst;
-
-	// send START condition
 	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
-
-	// wait until transmission completed
-		while(!(TWCR & (1<<TWINT)));
-
-	// check value of TWI Status Register. Mask prescaler bits.
-	twst = TW_STATUS & 0xF8;
-	if ( (twst != TW_START) && (twst != TW_REP_START)) return 1;
-
-	// send device address
+	while(!(TWCR & (1<<TWINT)));
 	TWDR = address;
 	TWCR = (1<<TWINT) | (1<<TWEN);
-
-	// wail until transmission completed and ACK/NACK has been received
 	while(!(TWCR & (1<<TWINT)));
-
-	// check value of TWI Status Register. Mask prescaler bits.
-	twst = TW_STATUS & 0xF8;
-	if ( (twst != TW_MT_SLA_ACK) && (twst != TW_MR_SLA_ACK) ) return 1;
-
-	return 0;
-
-
-}/* i2c_start */
+}
 
 void i2c_master_stop(void)
 {
-    /* send stop condition */
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
-	
-	// wait until stop condition is executed and bus released
 	while(TWCR & (1<<TWSTO));
 
-}/* i2c_stop */
+}
 
 
-uint8_t i2c_master_write( uint8_t data )
+void i2c_master_write( uint8_t data )
 {	
-    uint8_t   twst;
-    
-	// send data to the previously addressed device
 	TWDR = data;
 	TWCR = (1<<TWINT) | (1<<TWEN);
-
-	// wait until transmission completed
 	while(!(TWCR & (1<<TWINT)));
-
-	// check value of TWI Status Register. Mask prescaler bits
-	twst = TW_STATUS & 0xF8;
-	if( twst != TW_MT_DATA_ACK) return 1;
-	return 0;
-
-}/* i2c_write */
+}
 
 uint8_t i2c_master_readNak(void)
 {
 	TWCR = (1<<TWINT) | (1<<TWEN);
 	while(!(TWCR & (1<<TWINT)));
-
     return TWDR;
 
-}/* i2c_readNak */
+}
